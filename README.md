@@ -56,6 +56,42 @@ liftoff -polish -cds -g <reference_annotation> -o <ourput_dir> {target_genome> <
 
 ## Multi-genome compare
 
+The below commands are ran for all comparisons. For example, original annotations vs liftoff round1 or minos-selected models vs liftoff round2. 
+
+"Reference" is the older set of annoations, "Target" is the newer. 
+
+```
+gffread --keep-genes -C -o Reference.coding.gff3 Reference.gff3" 
+
+gffread -g Genome.fna -T -w Reference.coding.cdna.fa -o Reference.coding.gtf Reference.coding.gff3
+
+gffread --keep-genes -C -o Target.coding.gff3 Target.gff3" 
+
+gffread -g Genome.fna -T -w Target.coding.cdna.fa -o Target.coding.gtf Target.coding.gff3
+
+```
+
+Run Mikado original and liftoff 
+```
+ mikado util convert -if gtf -of bed12 Reference.coding.gff3 Reference.coding.bed12
+
+ mikado util convert -if gtf -of bed12 Target.coding.gff3 Target.coding.bed12
+
+```
+
+Format files
+
+```
+# for i in file*; do echo $i; cd $i; sed -i 's/>/>ORI_/g' *coding.cdna.fa; sed -i 's/>/>NEW_/g' *transfer.cdna.fa; sed -i 's/ID=/ID=ORI_/g' *coding.bed12; sed -i 's/ID=/ID=NEW_/g' *transfer.bed12; cat *transfer.bed12 | cut -f4 | cut - d ";" -f1 | awk '{print $1"\t"$1}' | sed 's/^ID=//g' | sed 's/ID=NEW_//g' > tmp_group.txt; cat tmp_group.txt | sed 's/NEW_/ORI_/g' > tmp2_group.txt; cat tmp2_group.txt tmp_group.txt > group.txt; cat *coding.cdna.fa *transfer.cdna.fa > all.cdna.fa; cat *coding.bed12 *transfer.bed12 > all.bed12; myhist; rm tmp*; cd ..; done;
+
+```
+
+Run MultiGenomeCompare.py from eiliftover
+
+```
+multi_genome_compare.py -v -t 8 --groups group.txt --bed12 all.bed12 --cdnas all.cdna.fa -d out_pairwise -o out_summary
+```
+
 
 ## Minos
 
