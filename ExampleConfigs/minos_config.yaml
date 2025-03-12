@@ -1,0 +1,121 @@
+paths:
+  augustus_config_data: "/usr/local/config"
+params:
+  mikado:
+    prepare: "--minimum-cdna-length 100"
+    compare:
+        index: "--index"
+        transcripts: "--extended-refmap"
+        proteins: "--exclude-utr --extended-refmap"
+    serialise: ""
+    pick: ""
+  gffread:
+    blastp: ""
+    blastx: ""
+    default: ""
+    final: ""
+  seqkit:
+    # seqkit seq option is to filter CDS bps below -m <int> post mikado prepare stage
+    seq: "seq -m 48"
+    translate: "translate --threads 1 --line-width 70"
+    # codon table use cases:
+    # - when extracting proteins from genome sequence
+    # - passed to blastx option
+    codon_table: 1
+  cpc2: "-r"
+  kallisto:
+    index: ""
+    quant: "-b 100"
+  blast:
+    makeblastdb: "-dbtype prot"
+    chunk_size: 1000
+    blastp: "-max_target_seqs 1 -evalue 1e-5"
+    blastx: "-max_target_seqs 1 -evalue 1e-5"
+    tophit:
+      pident_threshold: 0.0
+      qcov_threshold: 0.0
+  diamond:
+    makedb: ""
+    chunk_size: 20000
+    blastp: "--max-target-seqs 1 --evalue 1e-5"
+    blastx: "--max-target-seqs 1 --evalue 1e-5"
+    tophit:
+      pident_threshold: 0.0
+      qcov_threshold: 0.0
+  genometools:
+    check: "gff3 -sort -tidy -retainids yes -addids no"
+    sort: "gff3 -sort -tidy -retainids yes"
+  busco:
+    proteins_prepare: "--offline --limit 5"
+    proteins_final: "--offline --limit 5"
+    transcripts_prepare: "--offline --limit 5"
+    transcripts_final: "--offline --limit 5"
+    genome: "--offline --limit 5"
+
+misc:
+  min_cds_length: 30
+  busco_max_copy_number: 4
+  # for formatting fasta headers
+  add_fields: "name,note,confidence,representative,biotype,partialness,multiexonic,superlocus"
+
+program_calls:
+  mikado: "singularity exec {container} mikado {program}"
+  gffread: "singularity exec /ei/software/cb/containers/minos/x86_64/Singularity.img gffread"
+  seqkit: "singularity exec /ei/software/cb/seqkit/2.1.0/x86_64/seqkit-2.1.0_CBG.img seqkit"
+  cpc2: "singularity exec /ei/software/cb/containers/minos/x86_64/Singularity.img CPC2"
+  kallisto: "singularity exec /ei/software/cb/containers/minos/x86_64/Singularity.img kallisto {program}"
+  blast: "singularity exec /ei/software/cb/containers/minos/x86_64/Singularity.img {program}"
+  diamond: "singularity exec /ei/software/cb/containers/minos/x86_64/Singularity.img diamond {program}"
+  genometools: "singularity exec /ei/software/cb/containers/minos/x86_64/Singularity.img gt"
+  busco: "singularity exec /ei/software/cb/busco/5.4.7/x86_64/busco-5.4.7_CBG.img busco"
+  copy_busco: "singularity exec /ei/software/cb/busco/5.4.7/x86_64/busco-5.4.7_CBG.img cp -r"
+  bedtools:
+    coverageBed: "singularity exec /ei/software/cb/containers/minos/x86_64/Singularity.img coverageBed"
+  time: "/usr/bin/time -v"
+
+collapse_metrics_thresholds:
+  ## -- START: TRANSPOSABLE ELEMENT GENE CLASSIFICATION -- ##
+  # The below metric decides whether a gene will be classified
+  # as a tranposable element gene.
+  # This is the only metric that will be applied alongside the
+  # protein coding and ncrna gene classification metrics.
+  repeat_associated: "{te_score} >= 0.4 and {busco_score} != 1"
+  ## -- END: TRANSPOSABLE ELEMENT GENE CLASSIFICATION -- ##
+
+
+  ## -- START: PROTEIN CODING GENE CLASSIFICATION -- ##
+  # The below metrics decides whether a gene will be classified
+  # as a protein coding gene or predicted gene.
+  predicted_gene: "{hom_tcov_score} < 0.3 and {cpc_score} < 0.25"
+  hi_confidence: "{classification} == 1 or {busco_score} == 1 or ({hom_qcov_score} >= 0.9 and {hom_tcov_score} >= 0.9) or ({hom_qcov_score} >= 0.8 and {hom_tcov_score} >= 0.8 and {transcript_score} >= 0.6)"
+  discard_coding: "({busco_score} == 0 and {protein_score} < 0.5 and {transcript_score} < 0.5 and {hom_tcov_score} < 0.5 and {expression_score} < 0.2) or {short_cds} == 1"
+  ## -- END: PROTEIN CODING GENE CLASSIFICATION -- ##
+
+
+  ## -- START: NCRNA GENE CLASSIFICATION -- ##
+  # The below metrics decides whether a gene will be classified
+  # as a ncRNA gene.
+  ncrna_gene: "{cpc_score} < 0.25 and {expression_score} > 0.6 and {hom_acov_score} == 0"
+  # any model failing to meet the above criteria for ncrna_gene will be discarded
+  ## -- END: NCRNA GENE CLASSIFICATION -- ##
+
+report_metric_oddities:
+ - "{exon_num} == 1"
+ - "{exon_num} > 1"
+ - "{five_utr_length} >= 10000"
+ - "{five_utr_num} >= 5"
+ - "{three_utr_length} >= 10000"
+ - "{three_utr_num} >= 4"
+ - "not {is_complete}"
+ - "not {has_start_codon}"
+ - "not {has_stop_codon}"
+ - "{max_exon_length} >= 10000"
+ - "{max_intron_length} >= 500000"
+ - "{min_exon_length} <= 5"
+ - "0 < {min_intron_length} <= 5"
+ - "{selected_cds_fraction} <= 0.3"
+ - "{canonical_intron_proportion} != 1"
+ - "{non_verified_introns_num} >= 1"
+ - "{only_non_canonical_splicing}"
+ - "{proportion_verified_introns} <= 0.5"
+ - "{suspicious_splicing}"
