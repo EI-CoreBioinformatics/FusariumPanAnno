@@ -100,7 +100,7 @@ Using [Minos](https://github.com/EI-CoreBioinformatics/minos)
 ### Configure
 
 ```
-minos configure --mikado-container <mikado_container> -o <output_directory> --external-metrics external_metrics.txt --external <external_config_mod.yaml> --genus-identifier <accession> --annotation-version EIv1.0 --busco-level p --busco-genome-run <link_to_busco_genome_run> --busco-lineage hypocreales_odb10 --busco-scoring 10 --use-diamond --config-file <minos_config.yaml> <transcript_model_list.txt> <scoring_template.yaml> <genome.fasta>
+minos configure --mikado-container <mikado_container> -o <output_directory> --external-metrics external_metrics.txt --external <minos_mikado_external_config_fungi.yaml> --genus-identifier <accession> --annotation-version EIv1.0 --busco-level p --busco-genome-run <link_to_busco_genome_run> --busco-lineage hypocreales_odb10 --busco-scoring 10 --use-diamond --config-file <minos_config.yaml> <transcript_model_list.txt> <minos_scoring_template_fungi.yaml> <genome.fasta>
 ```
 
 ### Run
