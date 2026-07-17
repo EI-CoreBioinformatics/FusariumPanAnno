@@ -19,7 +19,7 @@ busco -i /<genome.fasta> -m genome -o <out.genome.busco> -l hypocreales_odb10 -c
 ```
 ###  Protein
 ```
-busco -i /<genome.fasta> -m protein -o <out.genome.busco> -l hypocreales_odb10 -c 4 --download_path <download_path> --offline
+busco -i /<protein.fasta> -m protein -o <out.genome.busco> -l hypocreales_odb10 -c 4 --download_path <download_path> --offline
 ```
 
 ## Compleasm
@@ -38,7 +38,7 @@ eirepeat configure --species sordariomyceta --run_red_repeats --close_reference 
 ## Galba
 
 ```
-galba.pl --workingdir=<working_directory> --genome <softmasked_genome> -prot_seq=<extracted_protein_sequences> --gff3 --verbosity=4 -- threads <thread_num> --skipAllTraining --species=fusarium_ei --AUGUSTUS_CONFIG_PATH <config_path>
+galba.pl --workingdir=<working_directory> --genome=<softmasked_genome> --prot_seq=<extracted_protein_sequences> --gff3 --verbosity=4 --threads=<thread_num> --skipAllTraining --species=fusarium_ei --AUGUSTUS_CONFIG_PATH=<config_path>
 ```
 
 ## Helixer
@@ -50,7 +50,7 @@ Helixer.py --subsequence-length 21384 --overlap-offset 10692 --overlap-core-leng
 ## LiftOff
 
 ```
-liftoff -polish -cds -g <reference_annotation> -o <ourput_dir> {target_genome> <reference_genome>
+liftoff -polish -cds -g <reference_annotation> -o <output.gff3> <target_genome> <reference_genome>
 ```
 
 
@@ -61,11 +61,11 @@ The below commands are ran for all comparisons. For example, original annotation
 "Reference" is the older set of annoations, "Target" is the newer. 
 
 ```
-gffread --keep-genes -C -o Reference.coding.gff3 Reference.gff3" 
+gffread --keep-genes -C -o Reference.coding.gff3 Reference.gff3
 
 gffread -g Genome.fna -T -w Reference.coding.cdna.fa -o Reference.coding.gtf Reference.coding.gff3
 
-gffread --keep-genes -C -o Target.coding.gff3 Target.gff3" 
+gffread --keep-genes -C -o Target.coding.gff3 Target.gff3 
 
 gffread -g Genome.fna -T -w Target.coding.cdna.fa -o Target.coding.gtf Target.coding.gff3
 
@@ -82,7 +82,7 @@ Run Mikado original and liftoff
 Format files
 
 ```
-# for i in file*; do echo $i; cd $i; sed -i 's/>/>ORI_/g' *coding.cdna.fa; sed -i 's/>/>NEW_/g' *transfer.cdna.fa; sed -i 's/ID=/ID=ORI_/g' *coding.bed12; sed -i 's/ID=/ID=NEW_/g' *transfer.bed12; cat *transfer.bed12 | cut -f4 | cut - d ";" -f1 | awk '{print $1"\t"$1}' | sed 's/^ID=//g' | sed 's/ID=NEW_//g' > tmp_group.txt; cat tmp_group.txt | sed 's/NEW_/ORI_/g' > tmp2_group.txt; cat tmp2_group.txt tmp_group.txt > group.txt; cat *coding.cdna.fa *transfer.cdna.fa > all.cdna.fa; cat *coding.bed12 *transfer.bed12 > all.bed12; myhist; rm tmp*; cd ..; done;
+for i in file*; do echo "$i"; cd "$i" || exit; sed -i 's/>/>ORI_/g' *coding.cdna.fa; sed -i 's/>/>NEW_/g' *transfer.cdna.fa; sed -i 's/ID=/ID=ORI_/g' *coding.bed12; sed -i 's/ID=/ID=NEW_/g' *transfer.bed12; cut -f4 *transfer.bed12 | cut -d ";" -f1 | awk '{print $1"\t"$1}' | sed 's/^ID=//g' | sed 's/ID=NEW_//g' > tmp_group.txt; sed 's/NEW_/ORI_/g' tmp_group.txt > tmp2_group.txt; cat tmp2_group.txt tmp_group.txt > group.txt; cat *coding.cdna.fa *transfer.cdna.fa > all.cdna.fa; cat *coding.bed12 *transfer.bed12 > all.bed12; rm -f tmp_group.txt tmp2_group.txt; cd .. || exit; done
 
 ```
 
@@ -100,7 +100,7 @@ Using [Minos](https://github.com/EI-CoreBioinformatics/minos)
 ### Configure
 
 ```
-minos configure --mikado- container <mikado_container> -o <output_directory> --external-metrics external_metrics.txt --external <external_config_mod.yaml> --genus-identifier <accession> --annotation-version EIv1.0 --busco-level p --busco-genome-run <link_to_busco_genome_run> --busco-lineage hypocreales_odb10 --busco-scoring 10 --use-diamond --config-file <minos_config.yaml> <transcript_model_list.txt> <scoring_template.yaml> <genome.fasta> 
+minos configure --mikado-container <mikado_container> -o <output_directory> --external-metrics external_metrics.txt --external <external_config_mod.yaml> --genus-identifier <accession> --annotation-version EIv1.0 --busco-level p --busco-genome-run <link_to_busco_genome_run> --busco-lineage hypocreales_odb10 --busco-scoring 10 --use-diamond --config-file <minos_config.yaml> <transcript_model_list.txt> <scoring_template.yaml> <genome.fasta>
 ```
 
 ### Run
